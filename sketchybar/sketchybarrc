@@ -1,0 +1,129 @@
+#!/bin/bash
+
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+# Ayu Mirage colors
+BG_PRIMARY="0xff1f2430"
+BG_SURFACE="0xff242936"
+FG_PRIMARY="0xffe6e1cf"
+FG_SECONDARY="0xff8a93a5"
+LINE="0xff171b24"
+ACCENT="0xffffcc66"
+MUTED_ORANGE="0x80ffa659"
+ACTIVE_BG="0x44409fff"
+
+##### Bar Appearance #####
+sketchybar --bar position=top \
+                 height=40 \
+                 margin=0 \
+                 y_offset=8 \
+                 corner_radius=10 \
+                 blur_radius=30 \
+                 color=0x00000000 \
+                 display=main
+
+##### Defaults #####
+default=(
+  padding_left=8
+  padding_right=8
+  icon.font="JetBrainsMono Nerd Font:Bold:16.0"
+  label.font="SF Pro:Medium:14.0"
+  icon.color="$FG_PRIMARY"
+  label.color="$FG_PRIMARY"
+  icon.padding_left=8
+  icon.padding_right=8
+  label.padding_left=6
+  label.padding_right=6
+)
+sketchybar --default "${default[@]}"
+
+##### Events #####
+sketchybar --add event aerospace_workspace_change
+sketchybar -m --add event window_focus \
+              --add event title_change
+
+##### Left: Workspace Group #####
+for sid in q w e a s d z x c; do
+  sketchybar --add item space.$sid left \
+             --subscribe space.$sid aerospace_workspace_change \
+             --set space.$sid \
+                   background.color="$BG_SURFACE" \
+                   background.corner_radius=8 \
+                   background.height=28 \
+                   background.drawing=on \
+                   background.border_width=1 \
+                   background.border_color="$MUTED_ORANGE" \
+                   icon.drawing=on \
+                   icon.font="SF Pro:Bold:14.0" \
+                   icon="$sid" \
+                   icon.color="$FG_SECONDARY" \
+                   icon.padding_left=12 \
+                   icon.padding_right=4 \
+                   label.font="sketchybar-app-font:Regular:14.0" \
+                   label="" \
+                   label.color="$FG_SECONDARY" \
+                   label.padding_left=0 \
+                   label.padding_right=12 \
+                   click_script="aerospace workspace $sid" \
+                   script="$PLUGIN_DIR/aerospace.sh $sid"
+done
+
+sketchybar --add item title left \
+           --set title script="$PLUGIN_DIR/window_title.sh" \
+                       icon.font="sketchybar-app-font:Regular:16.0" \
+                       icon.drawing=on \
+                       icon.color="$FG_SECONDARY" \
+                       label.color="$FG_SECONDARY" \
+                       background.color="$BG_SURFACE" \
+                       background.corner_radius=8 \
+                       background.height=28 \
+                       background.drawing=on \
+                       background.border_width=1 \
+                       background.border_color="$FG_SECONDARY" \
+                       label.padding_left=4 \
+                       label.padding_right=12 \
+                       icon.padding_left=12 \
+                       icon.padding_right=4 \
+                       padding_left=8 \
+                       padding_right=0 \
+           --subscribe title window_focus front_app_switched space_change title_change
+
+# Create bracket for workspaces group
+sketchybar --add bracket workspaces_bracket '/space\..*/' title \
+           --set workspaces_bracket \
+                 background.color="$BG_PRIMARY" \
+                 background.corner_radius=10 \
+                 background.height=40 \
+                 background.border_width=2 \
+                 background.border_color="$BG_SURFACE"
+
+##### Right: Status Group #####
+sketchybar --add item clock right \
+           --set clock update_freq=10 \
+                       icon=󰥔 \
+                       label.color="$FG_SECONDARY" \
+                       icon.color="$FG_SECONDARY" \
+                       script="$PLUGIN_DIR/clock.sh" \
+           --add item volume right \
+           --set volume icon.color="$FG_SECONDARY" \
+                        label.color="$FG_SECONDARY" \
+                        script="$PLUGIN_DIR/volume.sh" \
+           --subscribe volume volume_change \
+           --add item battery right \
+           --set battery update_freq=120 \
+                         icon.color="$FG_SECONDARY" \
+                         label.color="$FG_SECONDARY" \
+                         script="$PLUGIN_DIR/battery.sh" \
+           --subscribe battery system_woke power_source_change
+
+# Create bracket for status group
+sketchybar --add bracket status_bracket clock volume battery \
+           --set status_bracket \
+                 background.color="$BG_PRIMARY" \
+                 background.corner_radius=10 \
+                 background.height=40 \
+                 background.border_width=2 \
+                 background.border_color="$BG_SURFACE"
+
+##### Finalize #####
+sketchybar --update
